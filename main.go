@@ -1,11 +1,13 @@
 package main
 
 import (
+	"bytes"
 	"flag"
 	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
+	"time"
 )
 
 const attributionFileName string = "Attributions.md"
@@ -68,29 +70,33 @@ func scanAssetsInFolder(folder string, match []string) ([]string, error) {
 }
 
 func createAttribFile(c *config) {
-	fmt.Printf("Creating \"%s\"...\n", attributionFileName)
+	fmt.Printf("⬇️  Creating \"%s\"...\n", attributionFileName)
 	os.Create(attributionFileName)
 }
 
 func populateAttribFile(c *config) {
-	assets, _ := scanAssetsInFolder(c.scanFolder, c.scanMatches)
-	
-	var attribString string
+	var attribBuf bytes.Buffer
 
-	attribString += "# Asset attributions\n"
+	fmt.Printf("🖊️  Populating...\n")
+
+	assets, _ := scanAssetsInFolder(c.scanFolder, c.scanMatches)
+
+	attribBuf.WriteString("# Asset attributions\n")
 	for _, v := range assets {
-		// fmt.Printf("## %s\n", v)
-		// fmt.Println("By [author] from [source]. \n[LICENSE CLAUSE]")
-		attribString += fmt.Sprintf("## %s\n", v)
-		attribString += "By [author] from [source]. \n\n[LICENSE CLAUSE]\n\n"
+		attribBuf.WriteString(("## "))
+		attribBuf.WriteString(v)
+		attribBuf.WriteString("\n")
+		attribBuf.WriteString("By [author] from [source]. \n\n[LICENSE CLAUSE]\n\n")
 	}
 
 	f, _ := os.Create(attributionFileName)
-	f.WriteString(attribString)
+	f.Write(attribBuf.Bytes())
 }
 
 func main() {
 	var c config = parseConfig()
+
+	now := time.Now()
 
 	if attribExists() {
 		populateAttribFile(&c)
@@ -98,4 +104,6 @@ func main() {
 		createAttribFile(&c)
 		populateAttribFile(&c)
 	}
+
+	fmt.Printf("✅ Done in %s!\n", time.Since(now))
 }

@@ -10,27 +10,20 @@ import (
 	"time"
 )
 
-const attributionFileName string = "Attributions.md"
+const attributionFileName = "Attributions.md"
 
 type config struct {
 	scanFolder  string
 	scanMatches []string
 }
 
-func parseFlags() (scanFolder string, scanMatches []string) {
+func parseConfig() config {
 	i := flag.String("i", ".", "Folder to scan assets for.")
 	flag.Parse()
 
 	matches := flag.Args()
 
-	return *i, matches
-}
-
-func parseConfig() config {
-	i, matches := parseFlags()
-	var c config = config{scanFolder: i, scanMatches: matches}
-
-	return c
+	return config{scanFolder: *i, scanMatches: matches}
 }
 
 func attribExists() bool {
@@ -83,10 +76,7 @@ func populateAttribFile(c *config) {
 
 	attribBuf.WriteString("# Asset attributions\n")
 	for _, v := range assets {
-		attribBuf.WriteString(("## "))
-		attribBuf.WriteString(v)
-		attribBuf.WriteString("\n")
-		attribBuf.WriteString("By [author] from [source]. \n\n[LICENSE CLAUSE]\n\n")
+		attribBuf.WriteString(fmt.Sprintf("## %s\nBy [author] from [source]. \n\n[LICENSE CLAUSE]\n\n", v))
 	}
 
 	f, _ := os.Create(attributionFileName)
@@ -94,8 +84,7 @@ func populateAttribFile(c *config) {
 }
 
 func main() {
-	var c config = parseConfig()
-
+	c := parseConfig()
 	now := time.Now()
 
 	if attribExists() {
